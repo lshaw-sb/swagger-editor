@@ -21,7 +21,11 @@ import "./brace-snippets-yaml"
 
 import "./editor.less"
 
+import {performanceLogger} from "plugins/utils"
+
 const NOOP = Function.prototype // Apparently the best way to no-op
+
+window.globalStopPipeLine = false
 
 export default function makeEditor({ editorPluginsToRun }) {
 
@@ -69,6 +73,8 @@ export default function makeEditor({ editorPluginsToRun }) {
 
     // This should be debounced, not only to prevent too many re-renders, but to also capture the this.yaml value, at the same time we'll call the upstream onChange
     onChange = (value) => {
+      performanceLogger("Editor:onChange:START OF PIPELINE")
+      window.globalStopPipeLine = false
       // Send it upstream ( this.silent is taken from react-ace module). It avoids firing onChange, when we update setValue
       this.yaml = this.yaml.slice(0,2) // Keep it small
       this.yaml.unshift(value) // Add this yaml onto a stack (in reverse ), so we can see if upstream sends us back something we just sent it!
@@ -77,6 +83,8 @@ export default function makeEditor({ editorPluginsToRun }) {
 
     checkForSilentOnChange = (value) => {
       if(!this.silent) {
+        performanceLogger("Editor:checkForSilentOnChange:RESTART PIPELINE")
+        window.globalStopPipeLine = true
         this.debouncedOnChange(value)
       }
     }

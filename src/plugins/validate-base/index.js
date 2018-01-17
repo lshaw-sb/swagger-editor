@@ -1,8 +1,12 @@
+import {addBreakToPipelineBefore } from "plugins/utils"
+
 // Base validate plugin that provides a placeholder `validateSpec` that fires
 // after `updateResolved` is dispatched.
 
 export const updateResolved = (ori, {specActions}) => (...args) => {
-  ori(...args)
+
+  addBreakToPipelineBefore(() => ori(...args),"updateResolved")
+
   /*
     To allow us to remove this, we should prefer the practice of
     only _composing_ inside of wrappedActions. It keeps us free to
@@ -13,7 +17,9 @@ export const updateResolved = (ori, {specActions}) => (...args) => {
     Which isn't bad.
   */
   const [ spec ] = args
-  specActions.validateSpec(spec)
+
+  addBreakToPipelineBefore(() => specActions.validateSpec(spec),"validateSpec")
+
 }
 
 //eslint-disable-next-line no-unused-vars
